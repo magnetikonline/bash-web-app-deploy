@@ -24,7 +24,7 @@ function writeNotice {
 function usage {
 
 	cat <<EOM
-Usage: $(basename $0) [OPTION]...
+Usage: $(basename "$0") [OPTION]...
 
   -d    execute a dry-run rsync deployment
   -t    retain build temporary directory for
