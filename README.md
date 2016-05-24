@@ -24,10 +24,10 @@ Script is rather opinionated in what is provided - fitting preferences for compo
 - Deployment system of Debian/Ubuntu Linux or variant.
 - [Rsync](https://download.samba.org/pub/rsync/rsync.html) installed on both deployment source and target systems.
 - [Sass](http://sass-lang.com) for compilation of source `.scss` style sheets to `.css`. Using original Ruby based version.
-- [Sass Globbing plugin](https://github.com/chriseppstein/sass-globbing) Ruby extension for Sass - allowing for wildcard `@include` of Sass documents.
+- [Sass Globbing](https://github.com/chriseppstein/sass-globbing) plugin for (Ruby) Sass - allows for wildcard `@include` of Sass documents.
 - [YUI Compressor](http://yui.github.io/yuicompressor/) and [Google Closure Compiler](https://developers.google.com/closure/compiler/) for CSS and JavaScript minification tasks respectively.
-- Java CLI required by both YUI Compressor and Google Closure Compiler.
-- Working SSH access to target system via public/private keys.
+- A Java CLI - required by both YUI Compressor and Google Closure Compiler.
+- Working SSH access to target system via suitable keys.
 
 ## Configuration
 Setup of script is in two parts - the source application and target server.
@@ -43,11 +43,11 @@ $ git add ./script/deploy.sh
 $ git commit -m 'Added symlink for bashwebappdeploy'
 ```
 
-Configuration is via `deploy.config` file(s) which will be loaded from either (in the following order):
-- Inline with created symlink to `deploy.sh` (from above example, this would be `./script/deploy.sh`), or...
-- Inline with the full canonical path to `deploy.sh`.
+Configuration is via `deploy.config` file(s), loaded from (in the following order):
+- Inline with the full canonical path to `deploy.sh`, and..
+- Inline with symlink to `deploy.sh` (from above example, this would be `./script/deploy.sh`).
 
-This allows for global (system) plus per-application configuration settings, which will be combined.
+This allows for both global (system); and per-application configuration settings.
 
 #### Settings
 - `JAR_YUI_COMPRESSOR` - Location of [YUI Compressor](http://yui.github.io/yuicompressor/) jar archive on source system.
