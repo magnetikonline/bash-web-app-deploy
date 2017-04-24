@@ -74,10 +74,10 @@ function rsyncSourceToBuildDir {
 		--out-format "%n" \
 		--filter ". $filterTmp" \
 		"$sourceDirCanonical/" "$buildDir"
+
 	echo
 
-	# delete temp file
-	rm -f $filterTmp
+	rm -f "$filterTmp"
 }
 
 function gzipResource {
@@ -85,7 +85,9 @@ function gzipResource {
 	# source file exists?
 	[[ -f $1 ]] || return
 
-	# compress file and give identical timestamp to source (for Nginx ngx_http_gzip_static_module module)
+	# compress file and give identical timestamp to source
+	# for use with the nginx ngx_http_gzip_static_module module
+	# See: http://nginx.org/en/docs/http/ngx_http_gzip_static_module.html
 	echo "Compressing resource:"
 	echo "Source: $1"
 	echo "Target: $1.gz"
@@ -112,13 +114,13 @@ function buildSass {
 
 			# source Sass document exists?
 			if [[ -f $sassSource ]]; then
-				echo "Compiling/minifying Sass -> CSS:"
+				echo "Compiling Sass -> CSS:"
 				echo "Source: $sassSource"
 				echo "Target: $cssTarget"
 				echo
 
 				# create parent directory structure in build target for generated CSS document
-				mkdir -p $(dirname "$cssTarget")
+				mkdir -p "$(dirname "$cssTarget")"
 
 				# now compile Sass document to output CSS
 				sass \
@@ -149,7 +151,7 @@ function buildSass {
 
 function buildJavaScript {
 
-	# if no JavaScript files defined for build - exit
+	# if no JavaScript build files defined - exit
 	[[ -z $BUILD_JAVASCRIPT_LIST ]] && return
 
 	IFS=$'\n'
@@ -247,7 +249,6 @@ function SSHRsyncBuildDirToServer {
 
 	echo
 
-	# delete temp file
 	rm -f "$filterTmp"
 }
 
@@ -269,8 +270,8 @@ while getopts ":dth" optKey; do
 	esac
 done
 
-# are rsync, java and sass installed?
-[[ -z $(which rsync) ]] && exitError "Unable to locate Rsync, installed?"
+# ensure rsync, java and sass all present
+[[ -z $(which rsync) ]] && exitError "Unable to locate rsync, installed?"
 [[ -z $(which java) ]] && exitError "Unable to locate Java, installed?"
 [[ -z $(which sass) ]] && exitError "Unable to locate Sass, installed?"
 
@@ -308,7 +309,7 @@ echo "Application source: $sourceDirCanonical"
 [[ -n $optionRetainBuildResultDir ]] && writeNotice "Retaining temporary build directory after deployment"
 
 # create build directory
-buildDir=$(mktemp -d --tmpdir $MKTEMP_TEMPLATE)
+buildDir=$(mktemp -d --tmpdir "$MKTEMP_TEMPLATE")
 echo "Build target: $buildDir"
 echo
 
@@ -329,14 +330,14 @@ fi
 # rsync build directory to destination server via SSH transit
 SSHRsyncBuildDirToServer
 
-if [[ -n $optionRetainBuildResultDir ]]; then
-	# keeping build directory
+if [[ $optionRetainBuildResultDir ]]; then
+	# retaining build directory
 	echo "Build directory located at: $buildDir"
 
 else
 	# remove build directory
 	echo "Removing build target work area: $buildDir"
-	rm -rf $buildDir
+	rm -rf "$buildDir"
 fi
 
 # success
