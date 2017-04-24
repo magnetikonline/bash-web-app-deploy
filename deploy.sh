@@ -26,9 +26,8 @@ function usage {
 	cat <<EOM
 Usage: $(basename "$0") [OPTION]...
 
-  -d    execute a dry-run rsync deployment
-  -t    retain build temporary directory for
-        review or verification after deployment
+  -d    dry-run rsync
+  -t    retain build directory after deployment
   -h    display help
 EOM
 

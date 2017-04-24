@@ -16,16 +16,16 @@ Script is rather opinionated in what is provided - fitting preferences for compo
 - Deployment of source files to target server controlled by a simple include/exclude path filter list.
 - Compilation of one or more [Sass](http://sass-lang.com/) style sheets to build target with automated minification.
 - Concatenation and minification of one or more source JavaScript file(s) to build target.
-- Automatic creation and deployment of gzipped CSS/JavaScript resources alongside uncompressed/default versions for use with Nginx [`ngx_http_gzip_static_module` module](http://nginx.org/en/docs/http/ngx_http_gzip_static_module.html) all at the maximum compression level offered by `gzip`.
+- Automatic creation of gzipped CSS/JavaScript resources placed alongside uncompressed versions for use with the Nginx [`ngx_http_gzip_static_module` module](https://nginx.org/en/docs/http/ngx_http_gzip_static_module.html) all at the maximum compression level offered by `gzip`.
 - An optional pre-deployment hook bash function to apply any final programmatic changes to built application, such as [Git SHA1 based build versioning](#pre-deploy-hook).
 - Rsync over SSH based deployments from source to target.
 
 ## Requirements
-- Deployment system of Debian/Ubuntu Linux or variant.
+- Deployment system of Debian/Ubuntu Linux (or variant).
 - [Rsync](https://download.samba.org/pub/rsync/rsync.html) installed on both deployment source and target systems.
 - [Sass](http://sass-lang.com) for compilation of source `.scss` style sheets to `.css`. Using original Ruby based version.
-- [Sass Globbing](https://github.com/chriseppstein/sass-globbing) plugin for (Ruby) Sass - allows for wildcard `@include` of Sass documents.
-- [YUI Compressor](http://yui.github.io/yuicompressor/) and [Google Closure Compiler](https://developers.google.com/closure/compiler/) for CSS and JavaScript minification tasks respectively.
+- [Sass Globbing](https://github.com/chriseppstein/sass-globbing) plugin for (Ruby based) Sass - enables wildcard `@include` of Sass documents.
+- [YUI Compressor](https://yui.github.io/yuicompressor/) and [Google Closure Compiler](https://developers.google.com/closure/compiler/) for CSS and JavaScript minification tasks respectively.
 - A Java CLI - required by both YUI Compressor and Google Closure Compiler.
 - Working SSH access to target system via suitable keys.
 
@@ -50,7 +50,7 @@ Configuration is via `deploy.config` file(s), loaded from (in the following orde
 This allows for both global (system); and per-application configuration settings.
 
 #### Settings
-- `JAR_YUI_COMPRESSOR` - Location of [YUI Compressor](http://yui.github.io/yuicompressor/) jar archive on source system.
+- `JAR_YUI_COMPRESSOR` - Location of [YUI Compressor](https://yui.github.io/yuicompressor/) jar archive on source system.
 - `JAR_GOOGLE_CLOSURE` - Location of [Google Closure Compiler](https://developers.google.com/closure/compiler/) jar archive on source system.
 - `SOURCE_DIR` - Application source, relative to `deploy.sh` (or called symlink to it). For example if `deploy.sh` symlink and `deploy.config` are located under a `/script/` directory, `SOURCE_DIR` could simply be given as `"../"` to reference the application source root.
 - `BUILD_SOURCE_FILTER` - Include/exclude rules for directories and files to be added from application source to the build. Specified via Rsync format filter rules - refer to `FILTER RULES` at the [Rsync man page](https://download.samba.org/pub/rsync/rsync.html) for filter rule format/usage.
@@ -142,9 +142,8 @@ A few optional command line switches are provided:
 ```
 Usage: deploy.sh [OPTION]...
 
-  -d    execute a dry-run rsync deployment
-  -t    retain build temporary directory for
-        review or verification after deployment
+  -d    dry-run rsync
+  -t    retain build directory after deployment
   -h    display help
 ```
 
