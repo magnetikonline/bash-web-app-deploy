@@ -164,7 +164,7 @@ function buildJavaScript {
 		if [[ $javaScriptBuildItem =~ ^([^|]+)\|([^|]+)$ ]]; then
 			local javaScriptBuildTarget=$(getPathCanonical "$buildDir/${BASH_REMATCH[2]}" "nocheck")
 			local javaScriptTempConcatTarget=$(getTempFile)
-			local buildStepHeaderWritten=""
+			local buildStepHeaderWritten
 
 			# work over each source JavaScript list item glob
 			IFS=","
@@ -176,7 +176,7 @@ function buildJavaScript {
 				# grab file(s) matched by source JavaScript source item
 				IFS=$'\n'
 				local javaScriptSourceFileItem
-				local globMatch=""
+				local globMatch
 
 				# note: don't quote [$sourceDirCanonical/$javaScriptSourceGlobItem] as may contain glob patterns
 				for javaScriptSourceFileItem in $sourceDirCanonical/$javaScriptSourceGlobItem; do
@@ -186,10 +186,10 @@ function buildJavaScript {
 					javaScriptSourceFileItem=$(getPathCanonical "$javaScriptSourceFileItem")
 
 					if [[ -f $javaScriptSourceFileItem ]]; then
-						globMatch="true"
-						if [[ -z $buildStepHeaderWritten ]]; then
+						globMatch=:
+						if [[ ! $buildStepHeaderWritten ]]; then
 							echo "Concatenate/minifying source JavaScript -> JavaScript:"
-							buildStepHeaderWritten="true"
+							buildStepHeaderWritten=:
 						fi
 
 						# add JavaScript to concatenate file target
@@ -198,7 +198,7 @@ function buildJavaScript {
 					fi
 				done
 
-				if [[ -z $globMatch ]]; then
+				if [[ ! $globMatch ]]; then
 					# resolved [$sourceDirCanonical/$javaScriptSourceGlobItem] glob path didn't match anything
 					writeWarning "JavaScript source glob $javaScriptSourceGlobItem did not match"
 				fi
@@ -245,7 +245,7 @@ function SSHRsyncBuildDirToServer {
 		${optionRsyncDryRunOnly:+--dry-run} \
 		--exclude-from "$filterTmp" \
 		--rsh "ssh -l $SERVER_SSH_USER -p $SERVER_SSH_PORT" \
-		"$buildDir/" "$SERVER_HOSTNAME::$SERVER_RSYNC_MODULE" || true
+		"$buildDir/" "$SERVER_HOSTNAME::$SERVER_RSYNC_MODULE" || :
 
 	echo
 
@@ -254,15 +254,15 @@ function SSHRsyncBuildDirToServer {
 
 
 # parse command line options
-optionRsyncDryRunOnly=""
-optionRetainBuildResultDir=""
+optionRsyncDryRunOnly=
+optionRetainBuildResultDir=
 while getopts ":dth" optKey; do
 	case $optKey in
 		d)
-			optionRsyncDryRunOnly="true"
+			optionRsyncDryRunOnly=:
 			;;
 		t)
-			optionRetainBuildResultDir="true"
+			optionRetainBuildResultDir=:
 			;;
 		h|*)
 			usage
@@ -275,7 +275,7 @@ done
 [[ -z $(which java) ]] && exitError "Unable to locate Java, installed?"
 [[ -z $(which sass) ]] && exitError "Unable to locate Sass, installed?"
 
-# load (optional) global and application configuration
+# load and validate (optional) global and application configuration files
 loadConfiguration
 
 # validate config settings - YUI compressor/Google closure compiler jars
@@ -305,8 +305,8 @@ sourceDirCanonical=$(getPathCanonical "$DIRNAME/$SOURCE_DIR")
 
 # everything validated - lets start the build process
 echo "Application source: $sourceDirCanonical"
-[[ -n $optionRsyncDryRunOnly ]] && writeNotice "Rsync dry-run deployment only"
-[[ -n $optionRetainBuildResultDir ]] && writeNotice "Retaining temporary build directory after deployment"
+[[ $optionRsyncDryRunOnly ]] && writeNotice "Rsync dry-run deployment only"
+[[ $optionRetainBuildResultDir ]] && writeNotice "Retaining temporary build directory after deployment"
 
 # create build directory
 buildDir=$(mktemp -d --tmpdir "$MKTEMP_TEMPLATE")
