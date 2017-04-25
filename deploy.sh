@@ -34,6 +34,26 @@ EOM
 	exit 2
 }
 
+function getTempFile {
+
+	local tempFile
+	tempFile=$(mktemp -q --tmpdir "$MKTEMP_TEMPLATE") || \
+		exitError "Unable to create temporary file"
+
+	echo "$tempFile"
+}
+
+function getPathCanonical {
+
+	if [[ $2 == "nocheck" ]]; then
+		readlink -mn "$1"
+
+	else
+		# note: will return error = 1 if any path component non-exists (except final) - hence || :
+		readlink -fn "$1" || :
+	fi
+}
+
 function loadConfiguration {
 
 	# attempt to load a global configuration file inline with the canonical script path
@@ -48,20 +68,35 @@ function loadConfiguration {
 	. "$appConfigFile"
 }
 
-function getTempFile {
+function validateConfiguration {
 
-	mktemp --tmpdir $MKTEMP_TEMPLATE
-}
+	# YUI compressor/Google closure compiler jars exist?
+	[[ -z $JAR_YUI_COMPRESSOR ]] && exitError "JAR_YUI_COMPRESSOR config parameter not defined."
+	[[ -f $JAR_YUI_COMPRESSOR ]] || exitError "Unable to locate YUI compressor jar at $JAR_YUI_COMPRESSOR."
 
-function getPathCanonical {
+	[[ -z $JAR_GOOGLE_CLOSURE ]] && exitError "JAR_GOOGLE_CLOSURE config parameter not defined."
+	[[ -f $JAR_GOOGLE_CLOSURE ]] || exitError "Unable to locate Google Closure Compiler jar at $JAR_GOOGLE_CLOSURE."
 
-	if [[ $2 == "nocheck" ]]; then
-		readlink -mn "$1"
+	# validate config settings - application source directory
+	[[ -z $SOURCE_DIR ]] && exitError "SOURCE_DIR config parameter not defined."
 
-	else
-		# note: will return error = 1 if any path component non-exists except final - hence || true
-		readlink -fn "$1" || true
-	fi
+	# canonicalize $SOURCE_DIR and validate directory exists
+	sourceDirCanonical=$(getPathCanonical "$DIRNAME/$SOURCE_DIR")
+	[[ -d $sourceDirCanonical ]] || exitError "Unable to locate source directory at $sourceDirCanonical"
+
+	# validate config settings - build source filter
+	[[ -z $BUILD_SOURCE_FILTER ]] && exitError "BUILD_SOURCE_FILTER config parameter not defined."
+
+	# validate config settings - target server details
+	[[ -z $SERVER_HOSTNAME ]] && exitError "SERVER_HOSTNAME config parameter not defined."
+	[[ -z $SERVER_SSH_USER ]] && exitError "SERVER_SSH_USER config parameter not defined."
+	[[ -z $SERVER_SSH_PORT ]] && exitError "SERVER_SSH_PORT config parameter not defined."
+
+	[[ -z $SERVER_RSYNC_MODULE ]] && exitError "SERVER_RSYNC_MODULE config parameter not defined."
+	[[ -z $SERVER_RSYNC_CHMOD ]] && exitError "SERVER_RSYNC_CHMOD config parameter not defined."
+
+	# return truthy
+	:
 }
 
 function rsyncSourceToBuildDir {
@@ -132,7 +167,10 @@ function buildSass {
 					"$sassSource" "$cssTarget"
 
 				# minify built CSS using YUI compressor then compress
-				cat "$cssTarget" | java -jar "$JAR_YUI_COMPRESSOR" --type css -o "$cssTarget"
+				cat "$cssTarget" | \
+					java -jar "$JAR_YUI_COMPRESSOR" \
+					--type css -o "$cssTarget"
+
 				gzipResource "$cssTarget"
 
 			else
@@ -213,7 +251,10 @@ function buildJavaScript {
 				mkdir -p "$(dirname "$javaScriptBuildTarget")"
 
 				# minify temporary JavaScript concatenate target to final build location then compress
-				cat "$javaScriptTempConcatTarget" | java -jar "$JAR_GOOGLE_CLOSURE" --js_output_file "$javaScriptBuildTarget"
+				cat "$javaScriptTempConcatTarget" | \
+					java -jar "$JAR_GOOGLE_CLOSURE" \
+					--js_output_file "$javaScriptBuildTarget"
+
 				gzipResource "$javaScriptBuildTarget"
 
 			else
@@ -277,31 +318,7 @@ done
 
 # load and validate (optional) global and application configuration files
 loadConfiguration
-
-# validate config settings - YUI compressor/Google closure compiler jars
-[[ -z $JAR_YUI_COMPRESSOR ]] && exitError "JAR_YUI_COMPRESSOR config parameter not defined."
-[[ -f $JAR_YUI_COMPRESSOR ]] || exitError "Unable to locate YUI compressor jar at $JAR_YUI_COMPRESSOR."
-
-[[ -z $JAR_GOOGLE_CLOSURE ]] && exitError "JAR_GOOGLE_CLOSURE config parameter not defined."
-[[ -f $JAR_GOOGLE_CLOSURE ]] || exitError "Unable to locate Google Closure Compiler jar at $JAR_GOOGLE_CLOSURE."
-
-# validate config settings - application source directory
-[[ -z $SOURCE_DIR ]] && exitError "SOURCE_DIR config parameter not defined."
-
-# canonicalize $SOURCE_DIR and validate directory exists
-sourceDirCanonical=$(getPathCanonical "$DIRNAME/$SOURCE_DIR")
-[[ -d $sourceDirCanonical ]] || exitError "Unable to locate source directory at $DIRNAME/$SOURCE_DIR"
-
-# validate config settings - build source filter
-[[ -z $BUILD_SOURCE_FILTER ]] && exitError "BUILD_SOURCE_FILTER config parameter not defined."
-
-# validate config settings - target server details
-[[ -z $SERVER_HOSTNAME ]] && exitError "SERVER_HOSTNAME config parameter not defined."
-[[ -z $SERVER_SSH_USER ]] && exitError "SERVER_SSH_USER config parameter not defined."
-[[ -z $SERVER_SSH_PORT ]] && exitError "SERVER_SSH_PORT config parameter not defined."
-
-[[ -z $SERVER_RSYNC_MODULE ]] && exitError "SERVER_RSYNC_MODULE config parameter not defined."
-[[ -z $SERVER_RSYNC_CHMOD ]] && exitError "SERVER_RSYNC_CHMOD config parameter not defined."
+validateConfiguration
 
 # everything validated - lets start the build process
 echo "Application source: $sourceDirCanonical"
