@@ -26,8 +26,8 @@ function usage {
 	cat <<EOM
 Usage: $(basename "$0") [OPTION]...
 
-  -d    dry-run rsync
-  -t    retain build directory after deployment
+  -d    dry run deployment
+  -t    retain build directory after completion
   -h    display help
 EOM
 
@@ -37,7 +37,7 @@ EOM
 function getTempFile {
 
 	local tempFile
-	tempFile=$(mktemp -q --tmpdir "$MKTEMP_TEMPLATE") || \
+	tempFile=$(mktemp --quiet --tmpdir "$MKTEMP_TEMPLATE") || \
 		exitError "Unable to create temporary file"
 
 	echo "$tempFile"
@@ -46,11 +46,11 @@ function getTempFile {
 function getPathCanonical {
 
 	if [[ $2 == "nocheck" ]]; then
-		readlink -mn "$1"
+		readlink --canonicalize-missing --no-newline "$1"
 
 	else
 		# note: will return error = 1 if any path component non-exists (except final) - hence || :
-		readlink -fn "$1" || :
+		readlink --canonicalize --no-newline "$1" || :
 	fi
 }
 
@@ -105,14 +105,16 @@ function rsyncSourceToBuildDir {
 	local filterTmp=$(getTempFile)
 	echo "$BUILD_SOURCE_FILTER" >"$filterTmp"
 
-	rsync -rt \
-		--out-format "%n" \
+	rsync \
 		--filter ". $filterTmp" \
+		--out-format "%n" \
+		--recursive \
+		--times \
 		"$sourceDirCanonical/" "$buildDir"
 
 	echo
 
-	rm -f "$filterTmp"
+	rm --force "$filterTmp"
 }
 
 function gzipResource {
@@ -128,8 +130,8 @@ function gzipResource {
 	echo "Target: $1.gz"
 	echo
 
-	gzip -c9 "$1" >"$1.gz"
-	touch -c --reference "$1" "$1.gz"
+	gzip --best --stdout "$1" >"$1.gz"
+	touch --no-create --reference "$1" "$1.gz"
 }
 
 function buildSass {
@@ -155,7 +157,7 @@ function buildSass {
 				echo
 
 				# create parent directory structure in build target for generated CSS document
-				mkdir -p "$(dirname "$cssTarget")"
+				mkdir --parents "$(dirname "$cssTarget")"
 
 				# now compile Sass document to output CSS
 				sass \
@@ -248,7 +250,7 @@ function buildJavaScript {
 				echo
 
 				# create parent directory structure in build target for final JavaScript source file
-				mkdir -p "$(dirname "$javaScriptBuildTarget")"
+				mkdir --parents "$(dirname "$javaScriptBuildTarget")"
 
 				# minify temporary JavaScript concatenate target to final build location then compress
 				cat "$javaScriptTempConcatTarget" | \
@@ -263,7 +265,7 @@ function buildJavaScript {
 			fi
 
 			# delete temporary JavaScript concatenate target
-			rm -f "$javaScriptTempConcatTarget"
+			rm --force "$javaScriptTempConcatTarget"
 
 		else
 			writeWarning "Invalid JavaScript build item definition: $javaScriptBuildItem"
@@ -280,17 +282,21 @@ function SSHRsyncBuildDirToServer {
 	local filterTmp=$(getTempFile)
 	[[ -n $SERVER_EXCLUDE_FILTER ]] && echo "$SERVER_EXCLUDE_FILTER" >"$filterTmp"
 
-	rsync -irtz \
+	rsync \
 		--chmod "$SERVER_RSYNC_CHMOD" \
+		--compress \
 		--delete \
-		${optionRsyncDryRunOnly:+--dry-run} \
 		--exclude-from "$filterTmp" \
+		--itemize-changes \
+		--recursive \
 		--rsh "ssh -l $SERVER_SSH_USER -p $SERVER_SSH_PORT" \
+		--times \
+		${optionRsyncDryRunOnly:+--dry-run} \
 		"$buildDir/" "$SERVER_HOSTNAME::$SERVER_RSYNC_MODULE" || :
 
 	echo
 
-	rm -f "$filterTmp"
+	rm --force "$filterTmp"
 }
 
 
@@ -326,7 +332,7 @@ echo "Application source: $sourceDirCanonical"
 [[ $optionRetainBuildResultDir ]] && writeNotice "Retaining temporary build directory after deployment"
 
 # create build directory
-buildDir=$(mktemp -d --tmpdir "$MKTEMP_TEMPLATE")
+buildDir=$(mktemp --directory --tmpdir "$MKTEMP_TEMPLATE")
 echo "Build target: $buildDir"
 echo
 
@@ -349,13 +355,10 @@ SSHRsyncBuildDirToServer
 
 if [[ $optionRetainBuildResultDir ]]; then
 	# retaining build directory
-	echo "Build directory located at: $buildDir"
+	echo "Build directory retained at: $buildDir"
 
 else
 	# remove build directory
 	echo "Removing build target work area: $buildDir"
-	rm -rf "$buildDir"
+	rm --force --recursive "$buildDir"
 fi
-
-# success
-exit 0

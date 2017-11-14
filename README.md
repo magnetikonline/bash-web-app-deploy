@@ -142,8 +142,8 @@ A few optional command line switches are provided:
 ```
 Usage: deploy.sh [OPTION]...
 
-  -d    dry-run rsync
-  -t    retain build directory after deployment
+  -d    dry run deployment
+  -t    retain build directory after completion
   -h    display help
 ```
 
