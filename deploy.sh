@@ -289,7 +289,7 @@ function SSHRsyncBuildDirToServer {
 		--exclude-from "$filterTmp" \
 		--itemize-changes \
 		--recursive \
-		--rsh "ssh -l $SERVER_SSH_USER -p $SERVER_SSH_PORT" \
+		--rsh "ssh -l \"$SERVER_SSH_USER\" -p \"$SERVER_SSH_PORT\"" \
 		--times \
 		${optionRsyncDryRunOnly:+--dry-run} \
 		"$buildDir/" "$SERVER_HOSTNAME::$SERVER_RSYNC_MODULE" || :
