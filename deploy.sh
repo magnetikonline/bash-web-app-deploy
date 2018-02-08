@@ -124,7 +124,7 @@ function gzipResource {
 
 	# compress file and give identical timestamp to source
 	# for use with the nginx ngx_http_gzip_static_module module
-	# See: http://nginx.org/en/docs/http/ngx_http_gzip_static_module.html
+	# See: https://nginx.org/en/docs/http/ngx_http_gzip_static_module.html
 	echo "Compressing resource:"
 	echo "Source: $1"
 	echo "Target: $1.gz"
@@ -139,9 +139,9 @@ function buildSass {
 	# if no Sass files defined for build - exit
 	[[ -z $BUILD_SASS_LIST ]] && return
 
-	IFS=$'\n'
 	local sassBuildItem
 
+	local IFS=$'\n'
 	for sassBuildItem in $BUILD_SASS_LIST; do
 		# ensure $sassBuildItem is in [SOURCE_SCSS|TARGET_CSS] format
 		if [[ $sassBuildItem =~ ^([^|]+)\|([^|]+)$ ]]; then
@@ -185,8 +185,6 @@ function buildSass {
 			echo
 		fi
 	done
-
-	unset IFS
 }
 
 function buildJavaScript {
@@ -194,11 +192,10 @@ function buildJavaScript {
 	# if no JavaScript build files defined - exit
 	[[ -z $BUILD_JAVASCRIPT_LIST ]] && return
 
-	IFS=$'\n'
 	local javaScriptBuildItem
 
+	local IFS=$'\n'
 	for javaScriptBuildItem in $BUILD_JAVASCRIPT_LIST; do
-		unset IFS
 
 		# ensure $javaScriptBuildItem is in [SOURCE_JAVASCRIPT_LIST|TARGET_JAVASCRIPT] format
 		if [[ $javaScriptBuildItem =~ ^([^|]+)\|([^|]+)$ ]]; then
@@ -207,20 +204,18 @@ function buildJavaScript {
 			local buildStepHeaderWritten
 
 			# work over each source JavaScript list item glob
-			IFS=","
 			local javaScriptSourceGlobItem
 
+			local IFS=","
 			for javaScriptSourceGlobItem in ${BASH_REMATCH[1]}; do
-				unset IFS
 
 				# grab file(s) matched by source JavaScript source item
-				IFS=$'\n'
 				local javaScriptSourceFileItem
 				local globMatch
 
-				# note: don't quote [$sourceDirCanonical/$javaScriptSourceGlobItem] as may contain glob patterns
-				for javaScriptSourceFileItem in $sourceDirCanonical/$javaScriptSourceGlobItem; do
-					unset IFS
+				# note: don't quote $javaScriptSourceGlobItem as may contain glob patterns
+				local IFS=$'\n'
+				for javaScriptSourceFileItem in "$sourceDirCanonical/"$javaScriptSourceGlobItem; do
 
 					# get canonical path to source JavaScript file
 					javaScriptSourceFileItem=$(getPathCanonical "$javaScriptSourceFileItem")
@@ -272,8 +267,6 @@ function buildJavaScript {
 			echo
 		fi
 	done
-
-	unset IFS
 }
 
 function SSHRsyncBuildDirToServer {
