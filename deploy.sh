@@ -250,7 +250,8 @@ function buildJavaScript {
 				# minify temporary JavaScript concatenate target to final build location then compress
 				cat "$javaScriptTempConcatTarget" | \
 					java -jar "$JAR_GOOGLE_CLOSURE" \
-					--js_output_file "$javaScriptBuildTarget"
+						--js_output_file "$javaScriptBuildTarget" \
+						--rewrite_polyfills false
 
 				gzipResource "$javaScriptBuildTarget"
 
