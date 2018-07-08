@@ -298,7 +298,7 @@ function SSHRsyncBuildDirToServer {
 optionRsyncDryRunOnly=
 optionRetainBuildResultDir=
 while getopts ":dth" optKey; do
-	case $optKey in
+	case "$optKey" in
 		d)
 			optionRsyncDryRunOnly=:
 			;;
