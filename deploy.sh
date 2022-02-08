@@ -6,23 +6,19 @@ MKTEMP_TEMPLATE="deploybuild.XXXXX"
 
 
 function exitError {
-
 	echo "Error: $1" >&2
 	exit 1
 }
 
 function writeWarning {
-
 	echo "Warning: $1"
 }
 
 function writeNotice {
-
 	echo "Notice: $1"
 }
 
 function usage {
-
 	cat <<EOM
 Usage: $(basename "$0") [OPTION]...
 
@@ -35,7 +31,6 @@ EOM
 }
 
 function getTempFile {
-
 	local tempFile
 	tempFile=$(mktemp --quiet --tmpdir "$MKTEMP_TEMPLATE") || \
 		exitError "Unable to create temporary file"
@@ -44,7 +39,6 @@ function getTempFile {
 }
 
 function getPathCanonical {
-
 	if [[ $2 == "nocheck" ]]; then
 		readlink --canonicalize-missing --no-newline "$1"
 
@@ -55,7 +49,6 @@ function getPathCanonical {
 }
 
 function loadConfiguration {
-
 	# attempt to load a global configuration file inline with the canonical script path
 	# note: global config file may not exist, that's fine
 	local globalConfigFile=$(getPathCanonical "$0")
@@ -69,7 +62,6 @@ function loadConfiguration {
 }
 
 function validateConfiguration {
-
 	# YUI compressor/Google closure compiler jars exist?
 	[[ -z $JAR_YUI_COMPRESSOR ]] && exitError "JAR_YUI_COMPRESSOR config parameter not defined."
 	[[ -f $JAR_YUI_COMPRESSOR ]] || exitError "Unable to locate YUI compressor jar at $JAR_YUI_COMPRESSOR."
@@ -100,7 +92,6 @@ function validateConfiguration {
 }
 
 function rsyncSourceToBuildDir {
-
 	# create temp file to hold source copy to build dir rsync filter rules
 	local filterTmp=$(getTempFile)
 	echo "$BUILD_SOURCE_FILTER" >"$filterTmp"
@@ -118,7 +109,6 @@ function rsyncSourceToBuildDir {
 }
 
 function gzipResource {
-
 	# source file exists?
 	[[ -f $1 ]] || return
 
@@ -135,7 +125,6 @@ function gzipResource {
 }
 
 function buildSass {
-
 	# if no Sass files defined for build - exit
 	[[ -z $BUILD_SASS_LIST ]] && return
 
@@ -188,7 +177,6 @@ function buildSass {
 }
 
 function buildJavaScript {
-
 	# if no JavaScript build files defined - exit
 	[[ -z $BUILD_JAVASCRIPT_LIST ]] && return
 
@@ -271,7 +259,6 @@ function buildJavaScript {
 }
 
 function SSHRsyncBuildDirToServer {
-
 	# create temp file to hold server exclude filter rules for rsync - empty file if not defined
 	local filterTmp=$(getTempFile)
 	[[ -n $SERVER_EXCLUDE_FILTER ]] && echo "$SERVER_EXCLUDE_FILTER" >"$filterTmp"
