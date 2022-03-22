@@ -299,9 +299,9 @@ while getopts ":dth" optKey; do
 done
 
 # ensure rsync, java and sass all present
-[[ -z $(which rsync) ]] && exitError "Unable to locate rsync, installed?"
-[[ -z $(which java) ]] && exitError "Unable to locate Java, installed?"
-[[ -z $(which sass) ]] && exitError "Unable to locate Sass, installed?"
+[[ ! -x $(command -v rsync) ]] && exitError "Unable to locate rsync, installed?"
+[[ ! -x $(command -v java) ]] && exitError "Unable to locate Java, installed?"
+[[ ! -x $(command -v sass) ]] && exitError "Unable to locate Sass, installed?"
 
 # load and validate (optional) global and application configuration files
 loadConfiguration
